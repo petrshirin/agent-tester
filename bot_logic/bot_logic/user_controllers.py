@@ -262,13 +262,16 @@ class UserLogic:
 
     def save_answer(self):
         user_selected_answers = self.user.studentcondition.current_selected_answers.all()
+        if not user_selected_answers:
+            return False
         question = user_selected_answers[0].question
         try:
             student_answer = StudentAnswer.objects.create(
                 student=self.user,
                 question=question,
                 test=StudentTest.objects.filter(student=self.user, closed=False).first())
-        except Exception:
+        except Exception as e:
+            print(e)
             text = self.language.student_test_not_found
             self.send_common_message(text, None)
             check_user_status(self, self.main_menu)()

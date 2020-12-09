@@ -36,7 +36,11 @@ def calculate_question(student_test: StudentTest, question: Question):
 def check_user_pay_status(self, test_num: int, func, page: int):
 
     def wrapper():
-        if not Test.objects.all()[test_num] in self.user.studentcondition.tests.all():
+        tests = Test.objects.all()
+        if len(tests) < test_num:
+            self.bot.send_message(self.user.user_id, self.language.invalid_pay_status)
+            return 1
+        if not tests[test_num-1] in self.user.studentcondition.tests.all():
             self.bot.send_message(self.user.user_id, self.language.invalid_pay_status)
             return 1
         else:

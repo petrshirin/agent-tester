@@ -77,4 +77,11 @@ class StudentAnswer(models.Model):
 @receiver(post_save, sender=Student)
 def create_student_additional_tables(sender: Student, instance: Student, created: bool, **kwargs):
     if created:
-        StudentCondition.objects.create(student=instance)
+        s = StudentCondition.objects.create(student=instance)
+        add_all_tests(s)
+
+
+def add_all_tests(s: StudentCondition):
+    for test in Test.objects.all():
+        s.tests.add(test)
+    s.save()
