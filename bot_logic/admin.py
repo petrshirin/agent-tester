@@ -8,7 +8,7 @@ from .models import *
 class QuestionAdmin(admin.ModelAdmin):
     list_display = ('pk', 'category', 'test', 'multi_answer')
     list_filter = ('test', 'category')
-    search_fields = ('text_contains',)
+    search_fields = ('text__contains',)
 
 
 @admin.register(Answer)
