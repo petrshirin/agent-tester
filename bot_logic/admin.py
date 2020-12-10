@@ -14,7 +14,7 @@ class QuestionAdmin(admin.ModelAdmin):
 class AnswerAdmin(admin.ModelAdmin):
     list_display = ('pk', 'question', 'is_right')
     list_filter = ('question__test',)
-    search_fields = ('pk', 'question__text__contains')
+    search_fields = ('pk', 'question__text__contains', 'text__contains')
 
 
 admin.site.register(Student)
