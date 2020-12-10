@@ -32,6 +32,15 @@ def calculate_question(student_test: StudentTest, question: Question):
     return is_right, error
 
 
+def check_done_test(tests, test_id: int = 1) -> bool:
+    if test_id == 0:
+        return True
+    for test in tests:
+        if test.pk == test_id:
+            return True
+    return False
+
+
 # pay middleware
 def check_user_pay_status(self, test_num: int, func, page: int):
 
