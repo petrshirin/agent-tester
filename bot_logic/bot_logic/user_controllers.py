@@ -326,4 +326,5 @@ class UserLogic:
 
         text = self.language.test_info.format(true_point, all_points, test_result, "{}".format(calculated_dict_to_array(errors)))
         self.send_common_message(text, None)
+        self.bot.send_message(self.message.chat.id, "Что вы хотите сделать?")
         return self.user.step
