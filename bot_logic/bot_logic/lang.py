@@ -31,6 +31,7 @@ class Lang:
     register_fio = """Введите ваше ФИО"""
     register_agency = """Введите название вашего агенства"""
     register_city = """Введите ваш город"""
+    test_unavailable = """Этот тест недоступен, пройдите сперва тест Агента"""
 
     def __init__(self, lang='RU'):
         self.lang = lang
