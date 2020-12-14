@@ -229,7 +229,8 @@ class UserLogic:
             return check_user_status(self, self.main_menu)()
 
         questions = test.question_set.all()
-        if question_num == len(questions):
+        if question_num >= len(questions):
+            print('debug')
             return self.complete_test()
         else:
             question = questions[question_num]
@@ -237,6 +238,7 @@ class UserLogic:
         text = self.language.question_wrapper.format(question_num + 1, question.text, generate_answers_in_message(question.answer_set.all()))
 
         self.send_common_message(text, markup)
+        return self.user.step
 
     def clear_selected_answer(self, clear_place: str, test_num: int, num: int):
         self.user.studentcondition.current_selected_answers.clear()
