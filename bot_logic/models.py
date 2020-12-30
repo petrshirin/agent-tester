@@ -14,6 +14,9 @@ class Test(models.Model):
     class Meta:
         ordering = ['-pk']
 
+    def __str__(self):
+        return f"{self.pk} {self.name}"
+
 
 class Question(models.Model):
     text = models.TextField()
