@@ -1,6 +1,9 @@
 from telebot import types
 from typing import Callable, List, Type, Dict
 import re
+import logging
+
+LOG = logging.getLogger(__name__)
 
 
 class ArgumentError(TypeError):
@@ -49,6 +52,7 @@ class Route:
 
     def _get_arguments(self, data: List[str]) -> Dict:
         result = {}
+        LOG.error(data)
         for i in range(len(self.arguments)):
             result[self.arguments[i].name] = self.arguments[i].argument_type(data[i])
         return result
