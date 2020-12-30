@@ -201,11 +201,16 @@ class UserLogic:
         self.send_common_message(text, markup)
         return self.user.step
 
-    def start_test(self, name: str):
+    def test_menu(self, name: str):
         markup = self.keyboards.generate_test_menu(name)
         text = self.language.choice_test
         self.send_common_message(text, markup)
         return self.user.step
+
+    def start_test(self, test_num: int):
+        test = Test.objects.filter(pk=test_num).first()
+        student_test = StudentTest.objects.create(test=test, student=self.user)
+        return self.test(test_num, 0)
 
     def next_question(self, test_num: int, question_num: int):
         if question_num:
