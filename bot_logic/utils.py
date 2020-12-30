@@ -43,10 +43,9 @@ def check_done_test(tests, test_id: int = 1) -> bool:
 
 # pay middleware
 def check_user_pay_status(self, test_num: int, func, page: int):
-
     def wrapper():
-        tests = Test.objects.all()
-        if not tests[test_num] in self.user.studentcondition.tests.all():
+        test = Test.objects.filter(pk=test_num).first()
+        if test not in self.user.studentcondition.tests.all():
             self.bot.send_message(self.user.user_id, self.language.invalid_pay_status)
             return 1
         else:
@@ -58,7 +57,6 @@ def check_user_pay_status(self, test_num: int, func, page: int):
 
 # register middleware
 def check_user_status(self, func):
-
     def wrapper():
         if self.user and self.user.step >= 10:
             func()
@@ -159,4 +157,3 @@ def generate_answers_in_message(answers: List[Answer]):
         text += f"{i} - {answer.text}\n"
         i += 1
     return text
-
