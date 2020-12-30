@@ -53,7 +53,7 @@ def check_user_pay_status(self, test_num: int, func, page: int):
             self.bot.send_message(self.user.user_id, self.language.invalid_pay_status)
             return 1
         else:
-            result = func(page)
+            result = func(test_num, page)
         return result
 
     return wrapper

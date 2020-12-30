@@ -9,6 +9,7 @@ from django.utils.timezone import now
 
 class Test(models.Model):
     name = models.CharField(max_length=255)
+    class_name = models.CharField(max_length=10, default='agent')
 
     class Meta:
         ordering = ['-pk']

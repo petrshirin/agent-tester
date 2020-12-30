@@ -1,5 +1,5 @@
 from telebot import types
-from bot_logic.models import Question, Student
+from bot_logic.models import Question, Student, Test
 
 
 class ButtonData:
@@ -19,7 +19,8 @@ class ButtonData:
 class Keyboards:
     agent_start = ButtonData("Агенту", "menu?agent/")
     broker_start = ButtonData("Брокеру", "menu?broker/")
-    theory = ButtonData("Теория", "theory?{}/{}/")
+    start_theory = ButtonData("Теория", "start_theory?{}/")
+    theory = ButtonData("{}", "theory?{}/{}/")
     agent_test = ButtonData("Пройти тест", "test?agent")
     broker_test = ButtonData("Пройти тест", "test?broker")
     back = ButtonData("Назад", "{}")
@@ -29,6 +30,7 @@ class Keyboards:
     clear_selected_answer = ButtonData("Отчистить ответы", "clear_selected_answers?{}/{}/{}")
     checked_question = ButtonData("Проверочный вопрос", "checkedquestion?{}/{}/")
     checked_answer = ButtonData("Следующий раздел", "theory?{}/{}/")
+    test_option = ButtonData("{}", 'start_test?{}')
 
     def __init__(self, lang='RU'):
         self.lang = lang
@@ -43,11 +45,18 @@ class Keyboards:
                      self.broker_start.to_telegram())
         return keyboard
 
-    def get_class_menu(self,  page: int, class_name: str = "agent") -> types.InlineKeyboardMarkup:
+    def get_class_menu(self, class_name: str = "agent") -> types.InlineKeyboardMarkup:
         keyboard = types.InlineKeyboardMarkup(row_width=2)
         test = self.agent_test.to_telegram() if class_name == 'agent' else self.broker_test.to_telegram()
-        keyboard.add(self.theory.to_telegram(data=[class_name, page]),
+        keyboard.add(self.start_theory.to_telegram(data=[class_name]),
                      test)
+        return keyboard
+
+    def generate_keyboard_for_theory_blocks(self, class_name: str = "agent") -> types.InlineKeyboardMarkup:
+        keyboard = types.InlineKeyboardMarkup(row_width=1)
+        for test in Test.objects.filter(class_name=class_name).all():
+            keyboard.add(self.theory.to_telegram(name=[f"{test.name}"], data=[test.pk, 0]))
+        keyboard.add(self.theory.to_telegram(data=[f"menu?{class_name}/"]))
         return keyboard
 
     def generate_keyboard_for_test(self, user: Student, question: Question, question_num: int, test_num: int) -> types.InlineKeyboardMarkup:
@@ -95,6 +104,15 @@ class Keyboards:
             self.checked_answer.to_telegram(data=[class_name, page+1])
             )
         return keyboard
+
+    def generate_test_menu(self, class_name: str):
+        keyboard = types.InlineKeyboardMarkup(row_width=1)
+        for test in Test.objects.filter(class_name=class_name).all():
+            keyboard.add(self.test_option.to_telegram(name=[f"{test.name}"], data=[test.pk]))
+        if class_name == 'agent':
+            keyboard.add(self.back.to_telegram(data=['menu?agent/']))
+        else:
+            keyboard.add(self.back.to_telegram(data=['menu?broker/']))
 
 
 class KeyboardsRu(Keyboards):

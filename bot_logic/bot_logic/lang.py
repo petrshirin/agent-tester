@@ -32,6 +32,8 @@ class Lang:
     register_agency = """Введите название вашего агенства"""
     register_city = """Введите ваш город"""
     test_unavailable = """Этот тест недоступен, пройдите сперва тест Агента"""
+    choice_test = "Выберите тест для прохождения"
+    choice_theory_block = "Выберите теоритический блок, который хотите пройти"
 
     def __init__(self, lang='RU'):
         self.lang = lang

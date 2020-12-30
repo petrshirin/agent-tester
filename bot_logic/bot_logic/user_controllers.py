@@ -95,20 +95,27 @@ class UserLogic:
                                      self.keyboards.get_main_menu())
             return self.user.step
         text = self.language.class_menu
-        markup = self.keyboards.get_class_menu(0, class_name)
+        markup = self.keyboards.get_class_menu(class_name)
         self.send_common_message(text, markup)
         return self.user.step
 
-    def start_theory(self, class_name: str, page: int, **kwargs):
+    def start_theory(self, test_num: int, page: int, **kwargs):
+        test = Test.objects.filter(pk=test_num).first()
         if not kwargs.get('returned'):
-            if not self.check_checked_question(class_name, page):
+            if not self.check_checked_question(test.class_name, page):
                 return self.user.step
-        if class_name == "agent":
-            check_user_pay_status(self, 1, self.agent_theory, page)()
-        elif class_name == "broker":
-            check_user_pay_status(self, 2, self.broker_theory, page)()
+        if test.class_name == "agent":
+            check_user_pay_status(self, 1, self.theory, page)()
+        elif test.class_name == "broker":
+            check_user_pay_status(self, 2, self.theory, page)()
 
-    def check_checked_question(self, class_name: str, page: int):
+    def theory_menu(self, class_name: str):
+        markup = self.keyboards.generate_keyboard_for_theory_blocks(class_name)
+        text = self.language.choice_theory_block
+        self.send_common_message(text, markup)
+        return self.user.step
+
+    def check_checked_question(self, test_num: int, page: int):
         answers = self.user.studentcondition.current_selected_answers.all()
         if page == 0:
             self.user.studentcondition.current_selected_answers.clear()
@@ -121,20 +128,34 @@ class UserLogic:
             else:
                 all_count_question = 1
             if len(answers) != all_count_question:
-                self.start_theory(class_name, page - 1, returned=True)
+                self.start_theory(test_num, page - 1, returned=True)
                 is_checked = False
             else:
                 for answer in answers:
                     if not answer.is_right:
                         self.user.studentcondition.current_selected_answers.clear()
                         self.user.studentcondition.save()
-                        self.start_theory(class_name, page-1, returned=True)
+                        self.start_theory(test_num, page-1, returned=True)
                         is_checked = False
                         return is_checked
             self.user.studentcondition.current_selected_answers.clear()
             self.user.studentcondition.save()
             return is_checked
         return False
+
+    def theory(self, test_num: int, page: int):
+        test = Test.objects.filter(pk=test_num).first()
+        if not test:
+            self.bot.send_message(self.user.user_id, self.language.test_not_found)
+            return check_user_status(self, self.main_menu)()
+        questions = test.question_set.all()
+        if len(questions) == page:
+            return self.main_menu()
+        question = questions[page]
+        text = self.language.theory_wrapper.format(question.category, question.paragraph)
+        markup = self.keyboards.generate_keyboard_for_theory_block(page, test.class_name)
+        self.send_common_message(text, markup)
+        return self.user.step
 
     def agent_theory(self, page: int):
         test = Test.objects.filter(pk=1).first()
@@ -150,19 +171,16 @@ class UserLogic:
         self.send_common_message(text, markup)
         return self.user.step
 
-    def checked_question(self, class_name: str, page: int):
+    def checked_question(self, test_num: int, page: int):
         test = None
-        if class_name == 'agent':
-            test = Test.objects.filter(pk=1).first()
-        elif class_name == 'broker':
-            test = Test.objects.filter(pk=2).first()
+        test = Test.objects.filter(pk=test_num).first()
         if not test:
             self.bot.send_message(self.user.user_id, self.language.test_not_found)
             return check_user_status(self, self.main_menu)()
         question = test.question_set.all()[page]
         text = self.language.question_wrapper.format(page + 1, question.text, generate_answers_in_message(question.answer_set.all()))
         markup = self.keyboards.generate_keyboard_for_theory_question(
-            class_name,
+            test.name,
             self.user,
             question,
             page,
@@ -187,23 +205,16 @@ class UserLogic:
         return self.user.step
 
     def start_test(self, name: str):
-        if name == "agent":
-            test = Test.objects.filter(pk=1).first()
-            StudentTest.objects.create(test=test, student=self.user)
-            return self.agent_test(0)
-        elif name == "broker":
-            test = Test.objects.filter(pk=2).first()
-            StudentTest.objects.create(test=test, student=self.user)
-            return self.broker_test(0)
+        markup = self.keyboards.generate_test_menu(name)
+        text = self.language.choice_test
+        self.send_common_message(text, markup)
+        return self.user.step
 
     def next_question(self, test_num: int, question_num: int):
         if question_num:
             if not self.save_answer():
                 return 10
-        if test_num == 1:
-            return self.agent_test(question_num)
-        elif test_num == 2:
-            return self.broker_test(question_num)
+        return self.test(test_num, question_num)
 
     def broker_test(self, question_num=0):
         test = Test.objects.filter(pk=2).first()
@@ -218,6 +229,23 @@ class UserLogic:
             question = questions[question_num]
         text = self.language.question_wrapper.format(question_num, question.text, generate_answers_in_message(question.answer_set.all()))
         markup = self.keyboards.generate_keyboard_for_test(self.user, question, question_num, 2)
+
+        self.send_common_message(text, markup)
+        return self.user.step
+
+    def test(self, test_num: int, question_num: int = 0):
+        test = Test.objects.filter(pk=test_num).first()
+        if not test:
+            self.bot.send_message(self.user.user_id, self.language.test_not_found)
+            return check_user_status(self, self.main_menu)()
+
+        questions = test.question_set.all()
+        if question_num >= len(questions):
+            return self.complete_test()
+        else:
+            question = questions[question_num]
+        markup = self.keyboards.generate_keyboard_for_test(self.user, question, question_num, 1)
+        text = self.language.question_wrapper.format(question_num + 1, question.text, generate_answers_in_message(question.answer_set.all()))
 
         self.send_common_message(text, markup)
         return self.user.step
@@ -241,32 +269,20 @@ class UserLogic:
 
     def clear_selected_answer(self, clear_place: str, test_num: int, num: int):
         self.user.studentcondition.current_selected_answers.clear()
-        if test_num == 1:
-            if clear_place == "test":
-                return self.agent_test(num)
-            else:
-                return self.checked_question('agent', num)
-        elif test_num == 2:
-            if clear_place == "test":
-                return self.broker_test(num)
-            else:
-                return self.checked_question('broker', num)
+        if clear_place == "test":
+            return self.test(test_num, num)
+        else:
+            return self.checked_question(test_num, num)
 
     def select_answer(self, select_place: str, test_num: int, num: int, answer_id: int):
         answer = Answer.objects.filter(pk=answer_id).first()
         if answer:
             self.user.studentcondition.current_selected_answers.add(answer)
             self.user.studentcondition.save()
-        if test_num == 1:
-            if select_place == 'test':
-                return self.agent_test(num)
-            else:
-                return self.checked_question('agent', num)
-        elif test_num == 2:
-            if select_place == 'test':
-                return self.broker_test(num)
-            else:
-                return self.checked_question('broker', num)
+        if select_place == 'test':
+            return self.test(test_num, num)
+        else:
+            return self.checked_question(test_num, num)
 
     def save_answer(self):
         user_selected_answers = self.user.studentcondition.current_selected_answers.all()
