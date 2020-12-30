@@ -104,10 +104,7 @@ class UserLogic:
         if not kwargs.get('returned'):
             if not self.check_checked_question(test.class_name, page):
                 return self.user.step
-        if test.class_name == "agent":
-            check_user_pay_status(self, 1, self.theory, page)()
-        elif test.class_name == "broker":
-            check_user_pay_status(self, 2, self.theory, page)()
+        check_user_pay_status(self, test_num, self.theory, page)()
 
     def theory_menu(self, class_name: str):
         markup = self.keyboards.generate_keyboard_for_theory_blocks(class_name)
