@@ -56,7 +56,7 @@ class Keyboards:
         keyboard = types.InlineKeyboardMarkup(row_width=1)
         for test in Test.objects.filter(class_name=class_name).all():
             keyboard.add(self.theory.to_telegram(name=[f"{test.name}"], data=[test.pk, 0]))
-        keyboard.add(self.theory.to_telegram(data=[f"menu?{class_name}/"]))
+        keyboard.add(self.back.to_telegram(data=[f"menu?{class_name}/"]))
         return keyboard
 
     def generate_keyboard_for_test(self, user: Student, question: Question, question_num: int, test_num: int) -> types.InlineKeyboardMarkup:
