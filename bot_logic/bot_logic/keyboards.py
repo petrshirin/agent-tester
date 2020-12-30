@@ -108,7 +108,7 @@ class Keyboards:
     def generate_test_menu(self, class_name: str) -> types.InlineKeyboardMarkup:
         keyboard = types.InlineKeyboardMarkup(row_width=1)
         for test in Test.objects.filter(class_name=class_name).all():
-            keyboard.add(self.test_option.to_telegram(name=[f"{test.name}"], data=[test.pk]))
+            keyboard.add(self.test_option.to_telegram(name=[f"{test.name}"], data=[test.pk, 0]))
         if class_name == 'agent':
             keyboard.add(self.back.to_telegram(data=['menu?agent/']))
         else:
